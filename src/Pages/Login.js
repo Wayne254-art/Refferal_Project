@@ -36,10 +36,14 @@ const Login = () => {
       });
       toast.success(response.data.message);
       window.location.reload(true)
-      navigate(`/payment/${user.userId}`);
+
+      if(user.role ==="Admin"){
+        navigate(`/admidashboard`);
+      }
+      navigate(`/dashboard/${user.userId}`);
       dispatch(loadUser());
     } catch (error) {
-      toast.error(error.response?.data?.message);
+      toast.error(error.response?.data?.message ||`something went wrong please try again latter`);
     }
   };
   
@@ -73,7 +77,7 @@ const Login = () => {
             placeholder="Email, Username or Phone"
             name="identifier"
             id="identifier"
-            value={formData.email}
+            value={formData.identifier}
             onChange={handleChange}
             required
           />

@@ -30,3 +30,25 @@ export const fetchDeposit = createAsyncThunk(
     }
   }
 );
+
+// get deposits data get-all-totalDeposits
+export const GET_ALL_TOTAL_DEPOSITS = () => async (dispatch) => {
+  try {
+    dispatch({ type: 'GET_ALL_TOTAL_DEPOSITS_REQUEST' });
+
+    const { data } = await axios.get(
+      `${server}/activity/get-all-totalDeposits`,
+      { withCredentials: true }
+    );
+
+    dispatch({
+      type: 'GET_ALL_TOTAL_DEPOSITS_SUCCESS',
+      payload: data.totalAdminDeposits,
+    });
+  } catch (error) {
+    dispatch({
+      type: 'GET_ALL_TOTAL_DEPOSITS_FAIL',
+      payload: error.response?.data?.message || 'Failed to load Total Deposits',
+    });
+  }
+};

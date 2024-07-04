@@ -38,7 +38,7 @@ const ContactUs = () => {
                 <button type="submit">
                     {/* {loading ? 'Sending...' : 'Send Message'} */}send message
                 </button>
-                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginTop:'20px' }}>Developed by <Link to='https://www.instagram.com/wayne_marwa?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' style={{color: '#FF4433', textDecoration: 'none'}}>@Wayne_Marwa.ke</Link></p>
+                <p style={{ display: 'flex', alignItems: 'center', justifyContent: 'center',marginTop:'20px',fontSize:'13px' }}>Developed by <Link to='https://www.instagram.com/wayne_marwa?utm_source=ig_web_button_share_sheet&igsh=ZDNlZDc0MzIxNw==' style={{color: '#FF4433', textDecoration: 'none'}}>@Wayne_Marwa.ke</Link></p>
             </form>
             {/* <ToastContainer /> */}
     </div>

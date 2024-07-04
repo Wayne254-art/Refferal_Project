@@ -1,14 +1,18 @@
-
+/* Add smooth scrolling */
+html {
+    scroll-behavior: smooth;
+}
 
 .aside-navbar {
     width: 250px;
     height: 100vh;
     background-color: #f4f4f4;
-    box-shadow: 2px 0 5px rgba(0,0,0,0.1);
+    box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
     position: fixed;
     display: flex;
     flex-direction: column;
     justify-content: space-between;
+    overflow-y: auto; /* Enable vertical scrolling */
 }
 
 .profile {
@@ -61,7 +65,13 @@
 }
 
 .aside-navbar ul li a:hover {
+    color: #ff0000;
     background-color: #d0d0d0; /* Change background color on hover */
+}
+
+.aside-navbar ul li a:active {
+    color: #ff0000;
+    background-color: #d0d0d0;
 }
 
 .logout-button {
@@ -77,7 +87,6 @@
 .logout-button:hover {
     background-color: #c82333;
 }
-
 
 /* Mobile styles */
 .menu-button {

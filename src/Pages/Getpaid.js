@@ -1,71 +1,33 @@
 import React, { useEffect, useState } from "react";
 import "../Styles/get-paid.css";
 import AsideNavbar from "../Components/AsideNavbar";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import { toast } from "react-toastify";
 import { useNavigate } from "react-router-dom";
-import axios from "axios";
-import { server } from "../config/serverapi";
+import { withdrawAmount } from "../Redux/actions/withdrawals.actions";
+import { loadUser } from "../Redux/actions/user.actions";
 
 const GetPaid = () => {
   const { user } = useSelector((state) => state.user);
+  const { loading } = useSelector((state) => state.withdrawal);
+  const [amount, setAmount] = useState("");
 
-  const [loading, setLoading] = useState(null);
-  const [amount, setAmount] = useState(0);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
-  // console.log(user)
-
-  const [deposit, setDeposit] = useState(null);
-  const navigate = useNavigate()
-
-  useEffect(() => {
-    const fetchDeposit = async () => {
-      try {
-        const { data } = await axios.get(`${server}/activity/get-totalDeposits/${user.userId}`, {
-          withCredentials: true,
-          headers: {
-            Authorization: `Bearer ${user.token}`,
-          },
-        });
-        setDeposit(data.totalDeposits)
-        // console.log(data);
-      } catch (error) {
-        console.log(error);
-        toast.error(error?.response?.data?.message || 'Error fetching total account balance');
-      }
-    };
-
-    fetchDeposit();
-  }, [user.token, user.userId]);
-
-  if (deposit === 0 || deposit=== null) {
-    navigate(`/payment/${user.userId}`)
-  }
-
-  const balance = user.totalBalance.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-
-//   console.log(balance);
-
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  // setLoading(true);
-  try {
-    const  response = await axios.post(
-      `${server}/activity/add-withdrawal-request/${user.userId}`,
-      {activityAmount:amount, phoneNumber: user.phoneNumber},
-      { withCredentials: true }
-    );
-
-    toast.success(response.data.message);
-    // console.log(response.data.message)
-    navigate(`/dashboard/${user.userId}`)
-  } catch (error) {
-      toast.error(error?.response?.data?.message || `Something went wrong`);
-  }
-};
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (amount < 200) {
+      return toast.info(`Minimum withdrawal amount is 200/=`);
+    }
+    try {
+      await dispatch(withdrawAmount(user.userId, amount, user.phoneNumber, user.email, user.username));
+      dispatch(loadUser())
+    } catch (error) {
+      toast.error(error?.response?.data?.message || `error withdrawaing funds`)
+      // Error handled by Redux actions, toast displayed there
+    }
+  };
 
   return (
     <>
@@ -73,23 +35,27 @@ const handleSubmit = async (e) => {
       <div className="signup-container">
         <form className="transaction-form" onSubmit={handleSubmit}>
           <h1>Withdraw Funds</h1>
-
           <h2>
-            Account Balance: <span>Kes.{balance}</span>
+            Account Balance:{" "}
+            <span>
+              Kes.
+              {user.totalBalance.toLocaleString("en-US", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+              })}
+            </span>
           </h2>
-
           <input
             type="number"
             id="amount"
             value={amount}
-            onChange={(e) => setAmount(e.target.value)}
-            placeholder="Enter amount (Minimum is 200)"
+            onChange={(e) => setAmount(Number(e.target.value))}
+            placeholder="(Minimum withdrawal is 200)"
             required
           />
           <button
             type="submit"
-            disabled={loading || balance <= 199}
-            title={balance <= 199 ? "Insufficient balance to withdraw" : ""}
+            disabled={loading || amount < 200 || amount > user.totalBalance}
           >
             {loading ? "Processing..." : "Withdraw"}
           </button>

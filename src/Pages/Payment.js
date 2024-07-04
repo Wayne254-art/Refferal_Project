@@ -3,7 +3,7 @@ import "../Styles/payment.css";
 import { Link, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { server } from "../config/serverapi";
+import { apiKey, paymentApiBaseUrl, server } from "../config/serverapi";
 import { toast } from "react-toastify";
 import { fetchDeposit } from "../Redux/actions/deposits.actions";
 
@@ -11,19 +11,6 @@ const Payment = () => {
   const { user } = useSelector((state) => state.user);
   const { deposit, loading, error } = useSelector((state) => state.deposit);
 
-  const UniqueCharOTP = (length) => {
-    const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-    let result = "";
-    for (let i = 0; i < length; i++) {
-      result += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
-    return result;
-  };
-
-  const transactionId = () => {
-    const charPart = UniqueCharOTP(8);
-    return charPart;
-  };
   const getFormattedTimestamp = () => {
     const date = new Date(Date.now()); // Add 1 hour (3600000 milliseconds)
     const year = date.getFullYear();
@@ -35,14 +22,13 @@ const Payment = () => {
 
     return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
   };
+  function convertPhoneNumber(phoneNumber) {
+    if (phoneNumber.startsWith(`+254`)) {
+      return "0" + phoneNumber.slice(4);
+    }
+    return phoneNumber;
+  }
 
-  const [formData, setFormData] = useState({
-    userId: user.userId,
-    activityAmount: 500,
-    transactionId: transactionId(),
-    paymentDate: getFormattedTimestamp(),
-    phoneNumber: user.phoneNumber,
-  });
   const navigate = useNavigate();
   const dispatch = useDispatch();
 
@@ -54,7 +40,7 @@ const Payment = () => {
 
   useEffect(() => {
     if (!loading && deposit !== null && deposit > 499) {
-      navigate(`/verification/${user.userId}`);
+      // navigate(`/verification/${user.userId}`);
     }
   }, [loading, deposit, user.userId, navigate]);
 
@@ -64,24 +50,90 @@ const Payment = () => {
     }
   }, [error]);
 
-  if (loading) return <div>Loading...</div>;
+  if (loading) {
+    return (
+      <div className="loading-container">
+        <div className="loading-spinner"></div>
+        <div className="loading-text">Loading...</div>
+      </div>
+    );
+  }
   // if (error) return <div>{error}</div>;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+
+    const config = {
+      headers: {
+        Authorization: `Bearer ${apiKey}`,
+      },
+    };
+
+    let responseData;
+    const originalPhoneNumber = user.phoneNumber;
+
+    // Convert phone number
+    const convertedPhoneNumber = convertPhoneNumber(originalPhoneNumber);
+
+    try {
+      const response = await axios.post(
+        `${paymentApiBaseUrl}`,
+        {
+          amount: 500,
+          phone: convertedPhoneNumber,
+        },
+        config
+      );
+      responseData = response.data.data;
+      console.log(responseData);
+      toast.info(`Waiting for payment validation...`);
+    } catch (error) {
+      console.error(error.response.data);
+      toast.error(error?.response?.data || `Error in processing payments`);
+      return;
+    }
+
     // setLoading(true);
     try {
-      const  response = await axios.post(
+      const data = {
+        userId: user.userId,
+        activityAmount: responseData.amount,
+        transactionId: responseData.refference,
+        paymentDate: getFormattedTimestamp(),
+        phoneNumber: responseData.phone,
+        CheckoutRequestID: responseData.CheckoutRequestID,
+      };
+
+      const response = await axios.post(
         `${server}/activity/add-deposit`,
-        formData,
+        data,
         { withCredentials: true }
       );
 
       toast.success(response.data.message);
-      // console.log(response.data.message)
-      navigate(`/verification/${user.userId}`)
+      // navigate(`/verification/${user.userId}`);
     } catch (error) {
-        toast.error(error.response.data.message || `Something went wrong`);
+      toast.error(error.response?.data?.message || "Something went wrong");
+    }
+  };
+
+  const handleLogOut = async (e) => {
+    e.preventDefault();
+    try {
+      const response = await axios.post(
+        `${server}/auth/logout-user`,
+        {},
+        {
+          withCredentials: true,
+          headers: {
+            Authorization: `Bearer ${user?.token}`,
+          },
+        }
+      );
+      toast.success(response.data.message);
+      window.location.reload(true);
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Logout failed");
     }
   };
 
@@ -130,7 +182,9 @@ const Payment = () => {
         </p>
       </div>
       <div className="button-container">
-        <button className="button">Logout</button>
+        <button className="button" onClick={handleLogOut}>
+          Logout
+        </button>
       </div>
     </div>
   );

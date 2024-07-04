@@ -5,6 +5,7 @@ import { fetchDeposit } from "../actions/deposits.actions";
 
 const initialState = {
   deposit: null,
+  adminDeposits: null,
   loading: false,
   error: null,
 };
@@ -23,7 +24,19 @@ const depositReducer = createReducer(initialState, (builder) => {
     .addCase(fetchDeposit.rejected, (state, action) => {
       state.loading = false;
       state.error = action.payload;
-    });
+    })
+    .addCase("GET_ALL_TOTAL_DEPOSITS_REQUEST", (state) => {
+      state.loading = true;
+    })
+    .addCase("GET_ALL_TOTAL_DEPOSITS_SUCCESS", (state, action) => {
+      state.loading = false;
+      state.adminDeposits = action.payload;
+      state.error = null;
+    })
+    .addCase("GET_ALL_TOTAL_DEPOSITS_FAIL", (state, action) => {
+      state.loading = false;
+      state.error = action.payload;
+    })
 });
 
 export default depositReducer;

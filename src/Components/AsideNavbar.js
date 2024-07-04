@@ -1,5 +1,5 @@
-import React, { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, {  useState } from "react";
+import { Link } from "react-router-dom";
 import "../Styles/asidenavbar.css";
 import { useSelector } from "react-redux";
 import { server } from "../config/serverapi";
@@ -14,39 +14,6 @@ const AsideNavbar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
 
-  const [deposit, setDeposit] = useState(null);
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    const fetchDeposit = async () => {
-      try {
-        const { data } = await axios.get(
-          `${server}/activity/get-totalDeposits/${user.userId}`,
-          {
-            withCredentials: true,
-            headers: {
-              Authorization: `Bearer ${user.token}`,
-            },
-          }
-        );
-        setDeposit(data.totalDeposits);
-        console.log(data);
-      } catch (error) {
-        console.log(error);
-        toast.error(
-          error?.response?.data?.message ||
-            "Error fetching total account balance"
-        );
-      }
-    };
-
-    fetchDeposit();
-  }, [user.token, user.userId]);
-
-  if (!deposit) {
-    navigate(`/payment/${user.userId}`);
-  }
-
   // console.log(user)
   const handleLogOut = async (e) => {
     e.preventDefault();
@@ -57,7 +24,7 @@ const AsideNavbar = () => {
         {
           withCredentials: true,
           headers: {
-            Authorization: `Bearer ${user.token}`,
+            Authorization: `Bearer ${user?.token}`,
           },
         }
       );
@@ -87,7 +54,7 @@ const AsideNavbar = () => {
           />
           <div className="profile-details">
             <h3>{`${user?.firstName} ${user?.lastName}`}</h3>
-            <p>{user.email}</p>
+            <p>{user?.email}</p>
           </div>
         </div>
         <button className="logout-button" onClick={handleLogOut}>
@@ -95,25 +62,63 @@ const AsideNavbar = () => {
         </button>
         <nav>
           <ul>
-            <br />
-            <li>
-              <Link to={`/dashboard/${user.userId}`}>Dashboard</Link>
-            </li>
-            <li>
-              <Link to={`/share/${user.userId}`}>Share</Link>
-            </li>
-            <li>
-              <Link to={`/earn/${user.userId}`}>Earn</Link>
-            </li>
-            <li>
-              <Link to={`/getpaid/${user.userId}`}>Get Paid</Link>
-            </li>
-            <li>
-              <Link to={`/settings/${user.userId}`}>Account Setting</Link>
-            </li>
-            <li>
-              <Link to={`/contact/${user.userId}`}>Contact-us</Link>
-            </li>
+            {user && user.role === "Admin" ? (
+              <>
+                <br />
+                <li>
+                  <Link to="/admindashboard">Dashboard</Link>
+                </li>
+                
+                <li>
+                  <Link to="/users">Users</Link>
+                </li>
+                <li>
+                  <Link to="/referrals">Referrals</Link>
+                </li>
+                <li>
+                  <Link to="/withdrawal-requests">Withdrawals</Link>
+                </li>
+                <li>
+                  <Link to="/supports">Contact Support</Link>
+                </li>
+                <li>
+                  <Link to={`/settings/${user?.userId}`}>Account Settings</Link>
+                </li>
+              </>
+            ) : (
+              <>
+                <li>
+                  <Link to={`/dashboard/${user?.userId}`}>
+                    <i className="fas fa-tachometer-alt"></i> Dashboard
+                  </Link>
+                </li>
+                <li>
+                  <Link to={`/share/${user?.userId}`}>
+                    <i className="fas fa-share-alt"></i> Share
+                  </Link>
+                </li>
+                <li>
+                  <Link to={`/earn/${user?.userId}`}>
+                    <i className="fas fa-coins"></i> Earn
+                  </Link>
+                </li>
+                <li>
+                  <Link to={`/getpaid/${user?.userId}`}>
+                    <i className="fas fa-money-bill-wave"></i> Get Paid
+                  </Link>
+                </li>
+                <li>
+                  <Link to={`/settings/${user?.userId}`}>
+                    <i className="fas fa-cog"></i> Account Setting
+                  </Link>
+                </li>
+                <li>
+                  <Link to={`/contact/${user?.userId}`}>
+                    <i className="fas fa-envelope"></i> Contact-us
+                  </Link>
+                </li>
+              </>
+            )}
           </ul>
         </nav>
       </aside>
